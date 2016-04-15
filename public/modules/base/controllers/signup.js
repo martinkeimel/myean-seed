@@ -1,0 +1,20 @@
+'use strict';
+
+angular.module('myean').controller('SignupCtrl', function ($scope, $rootScope, $location, userService) {
+
+  $scope.errorMessage = '';
+  $scope.roles = [];
+  $scope.user = {};
+
+  $scope.register = function () {
+    $scope.errors = {};
+
+    userService.create($scope.user)
+      .then(function (user) {
+        $rootScope.setCurrentUser(user);
+        $location.path('/');
+      }, function (err) {
+        $scope.errorMessage = err;
+      });
+  };
+});

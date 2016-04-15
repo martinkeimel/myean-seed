@@ -1,0 +1,17 @@
+<nav class="navbar navbar-default" ng-if='isAuthed()' role="navigation" ng-controller="NavbarCtrl">
+  <div class="navbar-header">
+    <a class="navbar-brand" href="#/" name="top">MEANP App</a>
+  </div>
+
+  <ul class="nav navbar-nav" role="tablist">
+    <li ng-repeat="module in menu.base"><a ng-href="#{{module.path}}">{{module.name}}</a></li>
+    <!-- //===== meanp-cli cart hook =====// -->
+  </ul>
+
+  <div class="navbar-header pull-right">
+    <ul class="nav navbar-nav" role="tablist">
+      <!-- //===== meanp-cli login hook2 =====// -->
+    </ul>
+  </div>
+
+</nav>

@@ -1,0 +1,9 @@
+{
+  "base": [
+    {
+      "name": "Home",
+      "path": "/",
+      "subMenu": null
+        }
+    ]
+}
