@@ -3,15 +3,17 @@
 var simpleDI = require('config/simpleDI');
 
 // TODO: Add required models here
-module.exports = simpleDI.inject(['app/roles', 'app/resources', 'app/permissions'], function (roles, resources, permissions) {
+module.exports = simpleDI.inject(['base/rolesController', 'base/resourcesController', 'app/permissions'], function (rolesController, resourcesController, permissions) {
 
   return {
     /**
      * Checks if a list of roles is allowed to access an resources's action
      */
     isAuthorized: function (roles, resource, action, callback) {
-      var perms = [];
-
+      // TODO: hardcoded
+      return callback(null, true);
+      /*var perms = [];
+      rolesController.getAll()
       roles.forEach(function (role) {
         if (permissions[role]) {
           perms = perms.concat(permissions[role]);
@@ -24,7 +26,7 @@ module.exports = simpleDI.inject(['app/roles', 'app/resources', 'app/permissions
         }
       }
 
-      return callback(null, false);
+      return callback(null, false);*/
     }
 
   };

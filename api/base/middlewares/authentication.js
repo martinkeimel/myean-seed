@@ -6,9 +6,9 @@ module.exports = simpleDI.inject(['jsonwebtoken', 'express-jwt'/*===== jwt hook1
 
   /*===== jwt hook3 =====*/
 
-  var validateAndEnforceJwt = expressJwt({
+  /*var validateAndEnforceJwt = expressJwt({
     secret: new Buffer(process.env.AUTH0_CLIENT_SECRET, 'base64')
-  });
+  });*/
 
   return {
 
@@ -18,9 +18,10 @@ module.exports = simpleDI.inject(['jsonwebtoken', 'express-jwt'/*===== jwt hook1
      * returns: { success, message }
      */
     verifySignature: function (req, res, next) {
+      // TODO: implement authentication
 
       // Check header, url or post parameters to get the token
-      var token = req.body.token || req.query.token || req.headers['x-access-token'];
+      /*var token = req.body.token || req.query.token || req.headers['x-access-token'];
 
       // If there is no token then return an error
       if (!token) {
@@ -29,11 +30,14 @@ module.exports = simpleDI.inject(['jsonwebtoken', 'express-jwt'/*===== jwt hook1
         });
       } else {
         req.decoded = token;next();
-      }
+      }*/
+      next();
     },
 
     verifySecret: function (req, res, next) {
-      validateAndEnforceJwt(req, res, next);
+      // TODO: implement authentication
+      return;
+      //validateAndEnforceJwt(req, res, next);
     }
 
   };

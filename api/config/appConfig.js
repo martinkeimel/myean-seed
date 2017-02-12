@@ -1,15 +1,13 @@
 'use strict';
 
 module.exports = {
-  env: process.env.node_env === 'production' ? 'production' : 'development', // jshint ignore:line
   port: process.env.PORT || 3000,
   db: {
-    uri: process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/meanp',
-    options: {
-      db: {
-        safe: true
-      }
-    }
+    host: process.env.MYSQLHOST || 'localhost',
+    port: process.env.MYSQLPORT || 3306,
+    user: process.env.MYSQLUSER || 'myean-seed',
+    password: process.env.MYSQLPASSWORD || 'P@ssword',
+    database: process.env.MYSQLDB || 'myean-seed'
   },
   secretKey: 'ourSecretKey'
 };

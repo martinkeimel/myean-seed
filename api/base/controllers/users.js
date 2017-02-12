@@ -2,10 +2,9 @@
 
 var simpleDI = require('config/simpleDI');
 
-module.exports = simpleDI.inject(['mongoose', 'base/userModel', 'jsonwebtoken', 'app/config'], function (mongoose, User, jwt, appConfig) {
+module.exports = simpleDI.inject(['base/userModel', 'jsonwebtoken', 'app/config'], function (User, jwt, appConfig) {
 
-  var ObjectId = mongoose.Types.ObjectId,
-    secretKey = appConfig.secretKey;
+  var secretKey = appConfig.secretKey;
 
   return {
 
@@ -14,80 +13,69 @@ module.exports = simpleDI.inject(['mongoose', 'base/userModel', 'jsonwebtoken', 
      * requires: {username, password, email}
      * returns: {email, password}
      */
-    create: function (req, res, next) {
-      var newUser = new User(req.body);
-      newUser.provider = 'local';
-
-      newUser.save(function (err) {
-        if (err) {
-          return res.json(400, err);
-        }
-
-        var response = {
-          user: newUser,
-          exp: Math.round(new Date().setDate(new Date().getDate() + 1) / 1000)
-        };
-
-        var token = jwt.sign(response, secretKey, {
-          expiresInMinutes: 1440
-        });
-
-        res.json(200, {
-          token: token,
-          message: 'User created.'
-        });
-      });
-    },
-
-    /**
-     *  Show profile
-     *  returns {username, profile}
-     */
-    show: function (req, res, next) {
-      var userId = req.params.userId;
-
-      User.findById(new ObjectId(userId), function (err, user) {
-        if (err) {
-          return next(new Error('Failed to load User'));
-        }
-        if (user) {
-          res.send({
-            username: user.username,
-            profile: user.profile
+      create: function (req, res, next) {
+          User.build({
+            username: req.body.username,
+            password: req.body.password,
+            email: req.body.email,
+            provider: 'local',
+            roleId: req.body.role.id
+          })
+          .save()
+          .then(function(createdUser) {
+            var response = {
+                user: createdUser,
+                exp: Math.round(new Date().setDate(new Date().getDate() + 1) / 1000)
+            };
+            
+            var token = jwt.sign(response, secretKey, {
+                expiresInMinutes: 1440
+            });
+                        
+            res.json(200, { token: token, message: 'User created.' });
+          })
+          .catch( function (error){
+              res.json(500, { message: 'An error occurred while trying to create a user: ' + error });
           });
-        } else {
-          res.send(404, {
-            message: 'User not found'
+        },
+    
+      /**
+       *  Show profile
+       *  returns {username, role}
+       */
+      show: function (req, res, next) {
+          var userId = req.params.userId;
+          User.findById(userId).then(function (user) {
+            if (user) {
+              res.json({username: user.username, role: user.role });
+            } else {
+              res.json(404, { message: 'User not found' });
+            }
+          })
+          .catch( function (error){
+              res.json(500, { message: 'An error occurred while trying to show a user: ' + error });
           });
-        }
-      });
-    },
-
-    /**
-     *  Username exists
-     *  returns {exists}
-     */
-    exists: function (req, res, next) {
-      var username = req.params.username;
-      User.findOne({
-        username: username
-      }, function (err, user) {
-        if (err) {
-          return next(new Error('Failed to load User ' + username));
-        }
-
-        if (user) {
-          res.json({
-            exists: true
+        },
+    
+      /**
+       *  Username exists
+       *  returns {exists}
+       */
+      exists: function (req, res, next) {
+          var username = req.params.username;
+          User.findOne({ username : username })
+            .then(function (user) {
+              if(user) {
+                res.json({exists: true});
+              } else {
+                res.json({exists: false});
+              }
+          })
+          .catch( function (error){
+              res.json(500, { message: 'An error occurred while trying to check user existance: ' + error });
           });
-        } else {
-          res.json({
-            exists: false
-          });
-        }
-      });
-    }
-
+      }
+    
   };
 
 });

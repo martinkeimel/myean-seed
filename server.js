@@ -2,7 +2,7 @@
 
 // Module dependencies.
 var express = require('express'),
-  modulepath = require('app-module-path');
+    modulepath = require('app-module-path');
 
 modulepath.addPath(__dirname + '/api/'); //Add's path of api to require
 
@@ -13,22 +13,17 @@ simpleDI.define('app/bootstrap', 'config/bootstrap');
 simpleDI.resolve('app/bootstrap');
 
 // Connect to db
-simpleDI.resolve('app/mongoDbConn');
+simpleDI.resolve('app/database');
 
 // Get app config
 var appConfig = simpleDI.resolve('app/config');
-var appFolder = appConfig.env === 'production' ? '/public/dist' : '/public';
-
-// Load the .env data
-var dotenv = simpleDI.resolve('dotenv');
-dotenv.config();
 
 var app = express();
 
 // Environments configuration
-app.configure(function () {
-  app.use(express.errorHandler());
-  app.use(express.static(__dirname + appFolder));
+app.configure( function(){
+    app.use(express.errorHandler());
+    app.use(express.static(__dirname + '/public'));
 });
 
 app.use(express.logger('dev'));
@@ -45,5 +40,5 @@ simpleDI.resolve('base/baseRoutes')(app);
 // Start server
 var port = appConfig.port;
 app.listen(port, function () {
-  console.log('listening on port %d in %s mode', port, app.get('env'));
+    console.log('listening on port %d in %s mode', port, app.get('env'));
 });

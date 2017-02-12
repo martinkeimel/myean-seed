@@ -2,18 +2,22 @@
 
 var simpleDI = require('config/simpleDI');
 
-module.exports = simpleDI.inject(['mongoose'], function(mongoose) {
+module.exports = simpleDI.inject(['app/database', 'Sequelize'], function(database, sequelize) {
 
-  var Schema   = mongoose.Schema;
-
-  var RoleSchema = new Schema({
-    roleName: {
-      type: String,
-      unique: true,
-      required: true
-    }
+  var Role = database.define('role', {
+    name: {
+      type: sequelize.STRING,
+      allowNull: false
+    },
+  },
+  {
+    indexes: [
+      {
+        unique: true,
+        fields: ['name']
+      }
+    ]
   });
-
-  return mongoose.model('role', RoleSchema);
-
+  
+  return Role;
 });
