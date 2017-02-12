@@ -6,9 +6,9 @@ module.exports = simpleDI.inject(['jsonwebtoken', 'express-jwt'/*===== jwt hook1
 
   /*===== jwt hook3 =====*/
 
-  var validateAndEnforceJwt = expressJwt({
+  /*var validateAndEnforceJwt = expressJwt({
     secret: new Buffer(process.env.AUTH0_CLIENT_SECRET, 'base64')
-  });
+  });*/
 
   return {
 
@@ -33,7 +33,9 @@ module.exports = simpleDI.inject(['jsonwebtoken', 'express-jwt'/*===== jwt hook1
     },
 
     verifySecret: function (req, res, next) {
-      validateAndEnforceJwt(req, res, next);
+      // TODO: implement authentication
+      return;
+      //validateAndEnforceJwt(req, res, next);
     }
 
   };

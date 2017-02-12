@@ -2,9 +2,7 @@
 
 var simpleDI = require('config/simpleDI');
 
-module.exports = simpleDI.inject(['mongoose', 'base/resourceModel', 'jsonwebtoken', 'app/config'], function (mongoose, Resource, jwt, appConfig) {
-
-  var ObjectId = mongoose.Types.ObjectId;
+module.exports = simpleDI.inject(['base/resourceModel', 'jsonwebtoken', 'app/config'], function (Resource, jwt, appConfig) {
 
   return {
 
@@ -13,28 +11,29 @@ module.exports = simpleDI.inject(['mongoose', 'base/resourceModel', 'jsonwebtoke
      * requires: {name, description}
      * returns: {message}
      */
-      create: function (req, res, next) {
-          var newResource = new Resource();
-          newResource.name = req.body.name;
-          newResource.description = req.body.description;
-          newResource.save(function(err) {
-            if (err) {
-              return res.json(400, { message: err });
-            }
-                        
-            res.json(200, { message: 'Resource created.' });
+     create: function (req, res, next) {
+          Resource.build(
+            {
+              name: req.body.name,
+              description: req.body.description
+            })
+            .save()
+            .then(function(newResource) {
+                res.json(200, { message: 'Resource created with id ' + newResource.id });
+            })
+            .catch( function (error){
+                res.json(500, { message: 'An error occurred while trying to create a resource: ' + error });
           });
         },
     
       /**
        *  get all resources
-       *  returns {_id, name, description}
+       *  returns {id, name, description, createdAt, updatedAt}
        */
       getAll: function (req, res, next) {          
         
-          Resource.find({}, function (err, resources) {
-            if (err) { return next(err); }
-            
+          Resource.findAll({}).then(function (resources) {
+           
             if (resources) {
               res.json(resources);
             } else {
@@ -44,11 +43,9 @@ module.exports = simpleDI.inject(['mongoose', 'base/resourceModel', 'jsonwebtoke
       },
       
       getById: function (req, res, next) {
-         var resourceId = req.params.resourceId;
+         var roleId = req.params.resourceId;
         
-          Resource.findById(ObjectId(resourceId)).exec(function (err, resource) {
-            if (err) { return next(err); }
-            
+          Resource.findById(roleId).then(function (resource) {
             if (resource) {
               res.json(resource);
             } else {
@@ -56,32 +53,38 @@ module.exports = simpleDI.inject(['mongoose', 'base/resourceModel', 'jsonwebtoke
             }
           });
       },
-            
+
       update: function (req, res, next) {
-        var idToUpdate = ObjectId(req.params.resourceId);
-        Resource.update({ _id : idToUpdate }, { name : req.body.name, description: req.body.description }, {}, function (err, affectedRows) {
-            if (err) {
-              res.json(400, err);
-            }
-            
-            if (affectedRows && affectedRows == 1) {
-              res.send(200, "OK");
-            }
-            else {
-              res.json(404, { message: 'Resource not found' });
-            }            
-          });
+        var idToUpdate = req.params.resourceId;
+        Resource.findById(idToUpdate).then(function (resourceToUpdate) {
+          if (resourceToUpdate){
+            resourceToUpdate.name = req.body.name;
+            resourceToUpdate.description = req.body.description;
+            resourceToUpdate.save().then(function (updatedRole) {
+              res.json(200, { message: 'Resource updated with id ' + updatedRole.id });
+            }).
+            catch(function (error) {
+              res.json(500, { message: 'An error occurred while trying to update resource ' + idToUpdate +': ' + error });
+            });
+          }
+          else
+          {
+            res.json(404, { message: 'Resource not found' });
+          }
+        });
        },
       
       delete: function (req, res, next) { 
         //TODO: check the role doesn't have users associated?
-        var idToDelete = ObjectId(req.params.resourceId);
-        Resource.remove({ _id : idToDelete }, function (err) {
-            if (err) {
-              res.json(400, err);
-            }
-            
-            res.send(200, "OK");
+        var idToDelete = req.params.resourceId;
+        Resource.findById(idToDelete).then(function (resourceToDelete) {
+          if (resourceToDelete){
+            resourceToDelete.destroy();
+            res.json(200, { message: 'Resource deleted' });
+          }
+          else{
+            res.json(404, { message: 'Resource not found' });
+          }
           });
       },
   };

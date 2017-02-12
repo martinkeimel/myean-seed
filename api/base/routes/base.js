@@ -7,9 +7,10 @@ module.exports = simpleDI.inject([
   'base/authenticationMiddleware',
   'base/authorizationMiddleware',
   'base/commonController',
-  'base/usersController'
+  'base/usersController',
+  'base/rolesController'
   /*===== cart hook #1 =====*/
-], function (/*===== login hook auth #2 =====*/authenticationMiddleware, authorizationMiddleware, commonController, usersController/*===== cart hook #2 =====*/) {
+], function (/*===== login hook auth #2 =====*/authenticationMiddleware, authorizationMiddleware, commonController, usersController, rolesController/*===== cart hook #2 =====*/) {
 
   return function baseRoutes(app) {
     // Config Route
@@ -27,6 +28,17 @@ module.exports = simpleDI.inject([
       authenticationMiddleware.verifySignature,
       authorizationMiddleware.getAuthorizationFn('users', 'view'),
       usersController.show
+    );
+
+    app.post('/auth/roles',
+      //authorizationMiddleware.getAuthorizationFn('signup', 'create'),
+      rolesController.create
+    );
+
+    app.get('/auth/roles/:roleId',
+      //authenticationMiddleware.verifySignature,
+      //authorizationMiddleware.getAuthorizationFn('users', 'view'),
+      rolesController.getById
     );
     
     /*===== login hook auth #3 =====*/

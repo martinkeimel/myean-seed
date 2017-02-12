@@ -2,7 +2,7 @@
 
 var simpleDI = require('config/simpleDI');
 
-module.exports = simpleDI.inject(['app/config', 'Sequelize', 'app/seeder'], function(appConfig, Sequelize, seeder) {
+module.exports = simpleDI.inject(['app/config', 'Sequelize'], function(appConfig, Sequelize) {
 
   var dbConfig = appConfig.db;
 
@@ -20,10 +20,8 @@ module.exports = simpleDI.inject(['app/config', 'Sequelize', 'app/seeder'], func
   // TODO: seed initial data
   // TODO: add migrations
   // TODO: remove force : true 
-  sequelize.sync({force:true}).then(function (a){
+  sequelize.sync().then(function (a){
     console.log ('Database successfully synced ');
-    seeder.execute();
-    console.log ('Database successfully seeded ');
   }).catch(function (error) {
     console.log ('ERROR syncing database: ' + error);
   });

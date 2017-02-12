@@ -2,145 +2,62 @@
 
 var simpleDI = require('config/simpleDI');
 
-module.exports = simpleDI.inject(['mongoose', 'crypto'], function (mongoose, crypto) {
+module.exports = simpleDI.inject(['app/database', 'Sequelize', 'crypto', 'base/roleModel'], function(database, sequelize, crypto, role) {
 
-  var Schema = mongoose.Schema;
-
-  var UserSchema = new Schema({
+  var User = database.define('user', {
     email: {
-      type: String,
-      unique: true,
-      required: true
+      type: sequelize.STRING,
+      allowNull: false,
+      isEmail: true
     },
     username: {
-      type: String,
-      unique: true,
-      required: true
+      type: sequelize.STRING,
+      allowNull: false
     },
-    hashedPassword: String,
-    salt: String,
-    name: String,
-    admin: Boolean,
-    guest: Boolean,
-    provider: String
-  });
-
-  /**
-   * Virtuals
-   */
-  UserSchema
-    .virtual('password')
-    .set(function (password) {
-      this._password = password;
-      this.salt = this.makeSalt();
-      this.hashedPassword = this.encryptPassword(password);
-    })
-    .get(function () {
-      return this._password;
-    });
-
-  UserSchema
-    .virtual('user_info')
-    .get(function () {
-      return {
-        '_id': this._id,
-        'username': this.username,
-        'email': this.email
-      };
-    });
-
-  /**
-   * Validations
-   */
-
-  var validatePresenceOf = function (value) {
-    return value && value.length;
-  };
-
-  UserSchema.path('email').validate(function (email) {
-    var emailRegex = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
-    return emailRegex.test(email);
-  }, 'The specified email is invalid.');
-
-  UserSchema.path('email').validate(function (value, respond) {
-    mongoose.models.User.findOne({
-      email: value
-    }, function (err, user) {
-      if (err) {
-        throw err;
+    hashedPassword: sequelize.STRING,
+    salt: sequelize.STRING,
+    name: sequelize.STRING,
+    admin: sequelize.BOOLEAN,
+    guest: sequelize.BOOLEAN,
+    provider: sequelize.STRING
+  },
+  {
+    indexes: [
+      {
+        unique: true,
+        fields: ['email']
+      },
+      {
+        unique: true,
+        fields: ['username']
       }
-      if (user) {
-        return respond(false);
+    ],
+    setterMethods: {
+      password: function (value){
+        this.setDataValue('salt', this.makeSalt());
+        this.setDataValue('hashedPassword', this.encryptPassword(value));
       }
-      respond(true);
-    });
-  }, 'The specified email address is already in use.');
-
-  UserSchema.path('username').validate(function (value, respond) {
-    mongoose.models.User.findOne({
-      username: value
-    }, function (err, user) {
-      if (err) {
-        throw err;
+    },
+    instanceMethods: {
+      makeSalt: function() {
+        return crypto.randomBytes(16).toString('base64');
+      },
+      encryptPassword: function(password) {
+        if (!password || !this.salt) { return ''; }
+        var salt = new Buffer(this.salt, 'base64');
+        return crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64');
+      },
+      validatePassword: function(plainText) {
+        return this.encryptPassword(plainText) === this.hashedPassword;
       }
-      if (user) {
-        return respond(false);
-      }
-      respond(true);
-    });
-  }, 'The specified username is already in use.');
-
-  /**
-   * Pre-save hook
-   */
-
-  UserSchema.pre('save', function (next) {
-    if (!this.isNew) {
-      return next();
-    }
-
-    if (!validatePresenceOf(this.password)) {
-      next(new Error('Invalid password'));
-    } else {
-      next();
     }
   });
 
-  /**
-   * Methods
-   */
-
-  UserSchema.methods = {
-
-    /**
-     * validatePassword - check if the passwords are the same
-     */
-
-    validatePassword: function (plainText) {
-      return this.encryptPassword(plainText) === this.hashedPassword;
-    },
-
-    /**
-     * Make salt
-     */
-
-    makeSalt: function () {
-      return crypto.randomBytes(16).toString('base64');
-    },
-
-    /**
-     * Encrypt password
-     */
-
-    encryptPassword: function (password) {
-      if (!password || !this.salt) {
-        return '';
-      }
-      var salt = new Buffer(this.salt, 'base64');
-      return crypto.pbkdf2Sync(password, salt, 10000, 64).toString('base64');
+  User.belongsTo(role, { 
+    foreignKey: {
+      field: 'roleId',
+      allowNull: false,
     }
-  };
-
-  return mongoose.model('User', UserSchema);
-
+  });
+  return User;
 });

@@ -6,22 +6,28 @@ module.exports = simpleDI.inject([], function () {
 
   // Define and resolve modules related to config
   simpleDI.define('app/config', 'config/appConfig');
-  simpleDI.define('app/mongoDbConn', 'db/mongo');
+  simpleDI.define('app/database', 'db/sequelize');
   simpleDI.define('app/menus', 'templates/menus');
 
   // TODO: This .json files should be replaced with the corresponding
   // models when they get implemented
-  simpleDI.define('app/roles', 'config/roles');
   simpleDI.define('app/resources', 'config/resources');
   simpleDI.define('app/permissions', 'config/permissions');
 
   // Define models
   simpleDI.define('base/userModel', 'base/models/user');
+  simpleDI.define('base/roleModel', 'base/models/role');
+  simpleDI.define('base/resourceModel', 'base/models/resource');
 
+  // Define DB seeder
+  //simpleDI.define('app/seeder', 'config/seeder');
+  
   // Define controllers
   /*===== login hook auth #4 =====*/
   simpleDI.define('base/commonController', 'base/controllers/common');
   simpleDI.define('base/usersController', 'base/controllers/users');
+  simpleDI.define('base/rolesController', 'base/controllers/roles');
+  simpleDI.define('base/resourcesController', 'base/controllers/resources');
   /*===== cart hook =====*/
 
   // Define services
